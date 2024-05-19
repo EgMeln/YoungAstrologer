@@ -1,0 +1,39 @@
+version: '3'
+
+services:
+  postgres:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: testpassword
+      POSTGRES_DB: YoungAstrologer
+    ports:
+      - "6432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  migrate:
+    image: migrate/migrate:v4.15.2
+    command: ["-path", "/migrations", "-database", "postgresql://postgres:testpassword@postgres:5432/YoungAstrologer?sslmode=disable", "up"]
+    volumes:
+      - ./migrations:/migrations
+    depends_on:
+      postgres:
+        condition: service_healthy
+  
+  young-astrologer-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - MIGRATION_DIR=./migrations 
+    ports:
+      - "11011:11011"
+    depends_on:
+      - postgres
+    volumes:
+      - ./migrations:/app/migrations

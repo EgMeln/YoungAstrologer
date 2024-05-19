@@ -1,0 +1,3 @@
+NASA_API_KEY: "DEMO_KEY"
+POSTGRES_URL: "postgresql://postgres:testpassword@postgres:5432/YoungAstrologer?sslmode=disable"
+SERVER_PORT: ":11011"
