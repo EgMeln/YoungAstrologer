@@ -103,7 +103,7 @@ func TestImageHandler_GetByDate(t *testing.T) {
 				var image model.Image
 				err = json.NewDecoder(recorder.Body).Decode(&image)
 				require.NoError(t, err)
-				require.Equal(t, tt.expectedResponse, image.Date)
+				require.Equal(t, tt.expectedResponse.Date, image.Date)
 				require.Equal(t, tt.expectedResponse.Title, image.Title)
 				require.Equal(t, tt.expectedResponse.Explanation, image.Explanation)
 				require.Equal(t, tt.expectedResponse.MediaType, image.MediaType)
