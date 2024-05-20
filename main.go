@@ -8,24 +8,23 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 
-	"github.com/EgMeln/YoungAstrologer/internal/config"
 	"github.com/EgMeln/YoungAstrologer/internal/handler"
 	"github.com/EgMeln/YoungAstrologer/internal/repository"
 	"github.com/EgMeln/YoungAstrologer/internal/service"
 )
 
 func main() {
-	logrus.SetLevel(logrus.InfoLevel)
+	log.SetLevel(log.InfoLevel)
 
 	logFile, err := os.OpenFile("logs.txt", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
-		logrus.Fatalf("Error opening log file: %v", err)
+		log.Fatalf("Error opening log file: %v", err)
 	}
 	defer logFile.Close()
 
-	logrus.SetOutput(logFile)
+	log.SetOutput(logFile)
 
 	client := &http.Client{
 		Transport: &http.Transport{
@@ -33,14 +32,24 @@ func main() {
 		},
 	}
 
-	cfg, err := config.NewConfig()
-	if err != nil {
-		logrus.Fatalf("Error loading config: %v\n", err)
+	nasaAPIKey := os.Getenv("YA_NASA_API_KEY")
+	if nasaAPIKey == "" {
+		log.Fatal("YA_NASA_API_KEY environment variable is required")
 	}
 
-	db, err := sql.Open("postgres", cfg.PostgresURL)
+	postgresURL := os.Getenv("YA_POSTGRES_URL")
+	if postgresURL == "" {
+		log.Fatal("YA_POSTGRES_URL environment variable is required")
+	}
+
+	serverPort := os.Getenv("YA_SERVER_PORT")
+	if serverPort == "" {
+		log.Fatal("YA_SERVER_PORT environment variable is required")
+	}
+
+	db, err := sql.Open("postgres", postgresURL)
 	if err != nil {
-		logrus.Fatalf("Error connecting to the database: %v\n", err)
+		log.Fatalf("Error connecting to the database: %v\n", err)
 	}
 	defer db.Close()
 
@@ -53,15 +62,15 @@ func main() {
 	http.HandleFunc("/images/date", imageHandler.GetByDate)
 
 	done := make(chan bool)
-	go startDailyTask(cfg.NASAAPIKey, done, apodHandler)
+	go startDailyTask(nasaAPIKey, done, apodHandler)
 
-	if err := http.ListenAndServe(cfg.ServerPort, nil); err != nil {
-		logrus.Fatalf("Error starting server: %v\n", err)
+	if err := http.ListenAndServe(serverPort, nil); err != nil {
+		log.Fatalf("Error starting server: %v\n", err)
 	}
 }
 
 func startDailyTask(apiKey string, done chan bool, apodHandler *handler.APODHandler) {
-	ticker := time.NewTicker(10 * time.Second)
+	ticker := time.NewTicker(15 * time.Second)
 	defer ticker.Stop()
 
 	for {
@@ -71,18 +80,17 @@ func startDailyTask(apiKey string, done chan bool, apodHandler *handler.APODHand
 		case <-ticker.C:
 			ticker = time.NewTicker(24 * time.Hour)
 
-			logrus.Info("Fetching APOD...")
-
+			log.Info("Fetching APOD...")
 			apod, err := apodHandler.FetchAPOD(apiKey)
 			if err != nil {
-				logrus.Errorf("Error fetching APOD: %v\n", err)
+				log.Errorf("Error fetching APOD: %v\n", err)
 			}
 
-			logrus.Infof("Title: %s\nDate: %s\nExplanation: %s\nURL: %s\n", apod.Title, apod.Date, apod.Explanation, apod.URL)
+			log.Infof("Title: %s\nDate: %s\nExplanation: %s\nURL: %s\n", apod.Title, apod.Date, apod.Explanation, apod.URL)
 			if err := apodHandler.SaveImage(apod); err != nil {
-				logrus.Errorf("Error saving image: %v\n", err)
+				log.Errorf("Error saving image: %v\n", err)
 			} else {
-				logrus.Infof("Image saved for date %s\n", apod.Date)
+				log.Infof("Image saved for date %s\n", apod.Date)
 			}
 		}
 	}
