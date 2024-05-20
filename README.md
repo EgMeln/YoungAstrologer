@@ -7,9 +7,9 @@ The service of a young astrologer, which receives metadata and an image of the A
 
 Ensure you have the following environment variables set:
 
-- `POSTGRES_URL` - The URL for connecting to the PostgreSQL database.
-- `NASA_API_KEY` - Your NASA API key for fetching APOD data.
-- `SERVER_PORT` - The port on which the server will run.
+- `YA_POSTGRES_URL` - The URL for connecting to the PostgreSQL database.
+- `YA_NASA_API_KEY` - Your NASA API key for fetching APOD data.
+- `YA_SERVER_PORT` - The port on which the server will run.
 
 
 ### Docker Compose

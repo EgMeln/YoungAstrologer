@@ -30,7 +30,11 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        - MIGRATION_DIR=./migrations 
+        - MIGRATION_DIR=./migrations
+    environment:
+      YA_NASA_API_KEY: ${YA_NASA_API_KEY}
+      YA_POSTGRES_URL: ${YA_POSTGRES_URL}
+      YA_SERVER_PORT: ${YA_SERVER_PORT}
     ports:
       - "11011:11011"
     depends_on:
