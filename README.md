@@ -37,7 +37,7 @@ docker-compose up -d
 This command stops the running containers for the application and the database.
 
 ```sh
-docker-compose dows
+docker-compose down
 ```
 
 ## Accessing the Service
